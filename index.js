@@ -1,57 +1,56 @@
 'use strict';
 
-var babelPresetMetal = require('babel-preset-metal');
-var babelPluginTransformNodeEnvInline = require('babel-plugin-transform-node-env-inline');
-var karmaBabelPreprocessor = require('karma-babel-preprocessor');
-var karmaChai = require('karma-chai');
-var karmaChromeLauncher = require('karma-chrome-launcher');
-var karmaCommonJs = require('karma-commonjs');
-var karmaMocha = require('karma-mocha');
-var karmaSinon = require('karma-sinon');
-var karmaSourceMapSupport = require('karma-source-map-support');
-
-var babelOptions = {
-  presets: [babelPresetMetal],
-  plugins: [babelPluginTransformNodeEnvInline],
-  sourceMap: 'both'
-};
+const babelPluginTransformNodeEnvInline = require('babel-plugin-transform-node-env-inline');
+const karmaChai = require('karma-chai');
+const karmaChromeLauncher = require('karma-chrome-launcher');
+const karmaMocha = require('karma-mocha');
+const karmaSinon = require('karma-sinon');
+const karmaSourceMapSupport = require('karma-source-map-support');
+const karmaWebpack = require('karma-webpack');
+const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = function (config) {
   config.set({
   	plugins: [
-  		karmaBabelPreprocessor,
     	karmaChai,
   		karmaChromeLauncher,
-    	karmaCommonJs,
     	karmaMocha,
     	karmaSourceMapSupport,
-    	karmaSinon
+			karmaSinon,
+			karmaWebpack
   	],
 
-    frameworks: ['mocha', 'chai', 'sinon', 'source-map-support', 'commonjs'],
+    frameworks: ['mocha', 'chai', 'sinon', 'source-map-support'],
 
     files: [
-      'node_modules/incremental-dom/dist/*.js',
-      'node_modules/incremental-dom-string/dist/*.js',
-      'node_modules/metal-soy-bundle/build/bundle.js',
-      'node_modules/html2incdom/src/*.js',
-      'node_modules/metal*/src/**/*.js',
-      'src/**/*.js',
-      'test/**/*.js'
-    ],
+			'test/**/*.js'
+		],
 
-    preprocessors: {
-      'src/**/*.js': ['babel', 'commonjs'],
-      'node_modules/html2incdom/src/*.js': ['babel', 'commonjs'],
-      'node_modules/incremental-dom/dist/*.js': ['babel', 'commonjs'],
-      'node_modules/incremental-dom-string/dist/*.js': ['babel', 'commonjs'],
-      'node_modules/metal-soy-bundle/build/bundle.js': ['babel', 'commonjs'],
-      'node_modules/metal*/src/**/*.js': ['babel', 'commonjs'],
-      'test/**/*.js': ['babel', 'commonjs']
+		webpack: {
+			module: {
+				rules: [
+					{
+						test: /\.scss$/,
+						use: ExtractTextPlugin.extract({
+							fallback: "style-loader",
+							use: "css-loader"
+						})
+					}
+				]
+			},
+			plugins: [
+				new ExtractTextPlugin("styles.css"),
+			]
+		},
+
+		webpackMiddleware: {
+      noInfo: true
     },
 
-    browsers: ['Chrome'],
+    preprocessors: {
+      'test/**/*.js': ['webpack']
+    },
 
-    babelPreprocessor: {options: babelOptions}
+    browsers: ['Chrome']
   });
 };
